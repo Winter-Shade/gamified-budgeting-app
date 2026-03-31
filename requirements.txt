@@ -10,9 +10,13 @@ Flask-CORS==5.0.0
 
 # Trading: market data
 yfinance>=0.2.40
+polygon-api-client>=1.16.0
 
-# Trading: AI trader (Gemini API)
+# Trading: AI trader — multi-agent MCP framework
+openai-agents>=0.2.3
+litellm>=1.50.0
 google-genai>=1.0.0
+nest-asyncio>=1.6.0
 
 # Trading: scheduled runs
 APScheduler>=3.10.0
