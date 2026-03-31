@@ -1,28 +1,93 @@
-# BudgetQuest — Gamified Budgeting System (Phase 1 MVP)
+# BudgetQuest — Gamified Budgeting & Sustainable Finance
 
-A production-ready Flask backend for a gamified budgeting system. Every expense triggers a financial update, a reward computation (XP/Gold), and a transaction log — turning budgeting into a game.
+A full-stack web application that turns personal finance into a game while promoting sustainable spending habits. Every action — logging an expense, hitting a savings goal, reducing carbon output — earns XP, Gold, and levels you up.
 
-## Tech Stack
+**Tech Stack:** Flask · React + Vite · PostgreSQL · SQLAlchemy · JWT Auth
 
-- **Python 3.10+** / **Flask 3.x**
-- **PostgreSQL** / **SQLAlchemy ORM**
-- **JWT** authentication (PyJWT)
-- Clean architecture: `routes/ → services/ → models/`
+---
+
+## Features
+
+### Core Finance
+- **Expense Tracking** — Log expenses by category, account, and date
+- **Accounts** — Bank, wallet, and cash accounts with real balance tracking
+- **Budgets** — Monthly budgets with overspend detection
+- **Analytics** — Category breakdown, daily trend, budget vs actual, spending velocity, monthly comparison
+- **Calendar View** — Day-by-day spending heatmap
+- **Subscriptions** — Track recurring bills
+
+### Gamification
+- **XP & Levels** — Earn XP for every expense logged; level up through 10 tiers
+- **Gold** — Secondary currency earned by completing challenges
+- **Leaderboard** — Compete with friends by XP
+- **Challenges** — Streak, budget-limit, and no-spend challenges with XP rewards
+- **Friends** — Add friends, compare progress
+
+### Sustainable Finance (Phase 1)
+- **Savings Goals** — Set named goals with target amounts, deadlines, and categories; contribute and track progress
+- **Financial Health Score** — Composite 0–100 score from 5 weighted sub-dimensions:
+  - Savings Rate (30%), Budget Adherence (25%), Goal Progress (20%), Spending Consistency (15%), Emergency Buffer (10%)
+- **Carbon Footprint** — Estimates monthly CO₂ emissions from spending using per-category emission factors (kg CO₂ per ₹100); 6-month trend chart
+
+### Gamification Enhancements (Phase 2)
+- **1–250 Savings Challenge** — Interactive 250-cell grid; check off numbers in any order (number N = save ₹N); total = ₹31,375. Two modes:
+  - *Manual*: self-track, just tick off numbers
+  - *Auto Transfer*: each check deducts ₹N from a linked account automatically
+- **Daily Savings Challenge** — Set a fixed daily amount; check in each day to grow a streak; one grace day allowed per challenge before streak breaks
+- **Eco Challenges** — 6 preset sustainability-themed challenge templates (No Dining Out, Public Transport Only, Shopping Budget Cap, etc.) that auto-create and auto-join a challenge
+
+### Beta
+- **Equity Trading Simulator** — Paper trading with AI-driven automated traders (APScheduler, market data)
 
 ---
 
 ## Project Structure
 
 ```
+MajorProject-Flask/
 ├── app/
-│   ├── __init__.py          # App factory
-│   ├── config.py            # Configuration
-│   ├── extensions.py        # SQLAlchemy, Bcrypt
-│   ├── models/              # 7 SQLAlchemy models
-│   ├── routes/              # 6 Flask blueprints
-│   └── services/            # 8 service modules
-├── seed.py                  # Database seeder
-├── run.py                   # Entry point
+│   ├── __init__.py              # App factory — registers all blueprints & creates tables
+│   ├── config.py
+│   ├── extensions.py            # SQLAlchemy, Bcrypt
+│   ├── models/
+│   │   ├── user.py              # User + auth
+│   │   ├── account.py           # Bank/wallet/cash accounts
+│   │   ├── expense.py           # Expense records
+│   │   ├── budget.py            # Monthly budgets
+│   │   ├── category.py          # Expense categories (system + custom)
+│   │   ├── category_budget.py   # Per-category budget caps
+│   │   ├── wallet.py            # XP, Gold, Level
+│   │   ├── transaction.py       # XP/Gold transaction log
+│   │   ├── streak.py            # Daily login streaks
+│   │   ├── challenge.py         # Community challenges
+│   │   ├── challenge_participant.py
+│   │   ├── friendship.py
+│   │   ├── rewards_catalog.py
+│   │   ├── redemption.py
+│   │   ├── subscription.py
+│   │   ├── savings_goal.py      # Phase 1: Savings goals
+│   │   ├── carbon_emission_factor.py  # Phase 1: CO₂ lookup table
+│   │   ├── challenge_250.py     # Phase 2: 1-250 challenge state
+│   │   └── daily_savings.py     # Phase 2: Daily savings challenge + logs
+│   ├── routes/                  # Flask blueprints (one per domain)
+│   └── services/                # Business logic layer
+├── frontend/
+│   └── src/
+│       ├── pages/
+│       │   ├── Dashboard.jsx    # Overview: health score, goals, charts
+│       │   ├── Goals.jsx        # Phase 1: Savings Goals
+│       │   ├── Carbon.jsx       # Phase 1: Carbon Footprint
+│       │   ├── Challenge250.jsx # Phase 2: 1-250 grid
+│       │   ├── DailySavings.jsx # Phase 2: Daily streak challenge
+│       │   ├── Challenges.jsx   # Community challenges + Eco tab
+│       │   └── ...
+│       ├── components/
+│       │   ├── Sidebar.jsx      # Navigation
+│       │   └── Layout.jsx
+│       └── api/api.js           # Centralised API client
+├── equity-trading-prototype/    # AI trading simulator (standalone)
+├── seed.py                      # Database seeder
+├── run.py                       # Entry point
 └── requirements.txt
 ```
 
@@ -30,193 +95,107 @@ A production-ready Flask backend for a gamified budgeting system. Every expense 
 
 ## Setup & Run
 
-### 1. Prerequisites
-
+### Prerequisites
 - Python 3.10+
 - PostgreSQL running locally
+- Node.js 18+
 
-### 2. Create the database
+### 1. Database
 
 ```bash
 psql -U postgres -c "CREATE DATABASE budgetquest;"
 ```
 
-### 3. Install dependencies
+### 2. Backend
 
 ```bash
-cd MajorProject-Flask
+# Install Python dependencies (uses Homebrew Python on Mac)
 pip install -r requirements.txt
+
+# Start the Flask server
+PYTHONPATH=/path/to/MajorProject-Flask python3.10 run.py
 ```
 
-### 4. (Optional) Configure environment
+The server starts on `http://localhost:5000`. All tables are created automatically on first run.
 
-Create a `.env` file or export variables:
+### 3. Frontend
 
 ```bash
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/budgetquest"
-export SECRET_KEY="your-secret-key"
+cd frontend
+npm install
+npm run dev
 ```
 
-> Defaults work out of the box for local development.
+The React app runs on `http://localhost:5173` and proxies `/api/*` to Flask.
 
-### 5. Run the server
-
-```bash
-python run.py
-```
-
-Tables are created automatically on first startup.
-
-### 6. Seed the database
+### 4. Seed (optional)
 
 ```bash
 python seed.py
 ```
 
-Creates: 1 user (`hero`/`password123`), 3 accounts (₹100, ₹250, ₹50), 1 budget (₹200), 6 categories.
+Creates: 1 user (`hero` / `password123`), 3 accounts, 1 budget, default categories.
 
 ---
 
-## API Reference & curl Examples
+## API Overview
 
-### Auth
+All protected routes require `Authorization: Bearer <token>`.
 
-**Register**
-```bash
-curl -X POST http://localhost:5000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
-```
-
-**Login**
-```bash
-curl -X POST http://localhost:5000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"hero@budgetquest.com","password":"password123"}'
-```
-
-> Save the returned `token` for authenticated requests below.
-
-```bash
-export TOKEN="<paste-token-here>"
-```
-
----
-
-### Accounts
-
-**Create Account**
-```bash
-curl -X POST http://localhost:5000/accounts \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"name":"Emergency Fund","balance":500,"type":"bank"}'
-```
-
-**List Accounts**
-```bash
-curl http://localhost:5000/accounts \
-  -H "Authorization: Bearer $TOKEN"
-```
+| Domain | Endpoints |
+|--------|-----------|
+| Auth | `POST /auth/register`, `POST /auth/login` |
+| Accounts | `GET/POST /accounts`, `POST /accounts/:id/deposit` |
+| Expenses | `GET/POST /expenses`, `PUT/DELETE /expenses/:id` |
+| Budgets | `GET/POST /budgets` |
+| Dashboard | `GET /dashboard` |
+| Analytics | `GET /analytics`, `GET /analytics/monthly-summary` |
+| Challenges | `GET/POST /challenges`, `POST /challenges/:id/join`, `GET /challenges/eco-templates` |
+| Leaderboard | `GET /leaderboard` |
+| **Savings Goals** | `GET/POST /goals`, `PUT/DELETE /goals/:id`, `POST /goals/:id/contribute` |
+| **Health Score** | `GET /health-score` |
+| **Carbon** | `GET /carbon/monthly`, `GET /carbon/trend` |
+| **1-250 Challenge** | `GET /challenge-250`, `POST /challenge-250/start\|check\|uncheck\|reset` |
+| **Daily Savings** | `GET /daily-savings`, `POST /daily-savings/start\|check-in\|grace\|stop` |
+| Categories | `GET/POST /categories`, `POST /categories/:id/budget` |
+| Subscriptions | `CRUD /subscriptions` |
+| Trading (Beta) | `CRUD /trading/accounts`, `/trading/traders`, `/trading/market` |
 
 ---
 
-### Expenses
-
-**Add Expense** *(triggers reward engine)*
-```bash
-curl -X POST http://localhost:5000/expenses \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"account_id":1,"category_id":1,"amount":30}'
-```
-
-Response includes:
-- expense details
-- updated account balance
-- rewards earned (XP, Gold, Level)
-
-**List Expenses**
-```bash
-curl http://localhost:5000/expenses \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-### Budgets
-
-**Create Budget**
-```bash
-curl -X POST http://localhost:5000/budgets \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"amount":200,"month":"2026-03"}'
-```
-
-**List Budgets** *(includes computed spent/remaining)*
-```bash
-curl http://localhost:5000/budgets \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-### Dashboard
-
-**Get Dashboard**
-```bash
-curl http://localhost:5000/dashboard \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-Response:
-```json
-{
-  "total_balance": 370.0,
-  "total_spent": 30.0,
-  "remaining_budget": 170.0,
-  "xp": 3,
-  "level": 1,
-  "gold": 1
-}
-```
-
----
-
-### Leaderboard
-
-**Get Leaderboard** *(public — no auth required)*
-```bash
-curl http://localhost:5000/leaderboard
-curl "http://localhost:5000/leaderboard?limit=5"
-```
-
----
-
-## Core Logic: Expense → Reward Pipeline
+## Architecture
 
 ```
-POST /expenses
+Request
   │
-  ├── 1. Validate input (account ownership, sufficient balance)
-  ├── 2. Deduct amount from account
-  ├── 3. Insert expense record
-  ├── 4. Compute reward: xp = min(5, floor(amount × 0.1)), gold = 1
-  ├── 5. Create transaction log (EXPENSE_REWARD)
-  ├── 6. Update wallet (xp, gold, level = xp ÷ 100 + 1)
-  └── 7. COMMIT (atomic — rollback on any failure)
+  ▼
+Route (Blueprint)          ← validates input, extracts user_id from JWT
+  │
+  ▼
+Service                    ← all business logic lives here
+  │
+  ▼
+Model / SQLAlchemy         ← DB queries, relationships
+  │
+  ▼
+PostgreSQL
 ```
+
+Key design decisions:
+- **Single DB transaction** for expense → reward → wallet update (atomic, rollback on failure)
+- **Emission factors** are static kg CO₂/₹100 per category — approximated from Indian average consumption data
+- **Health Score** computed on-the-fly from live DB data; no caching needed at this scale
+- **Challenge 250** stores checked steps as a JSON column — avoids a 250-row join table per user
+- **Daily Savings** grace day is per-challenge, not per-day — prevents gaming
 
 ---
 
-## Constraints Enforced
+## Roadmap
 
-| Constraint | Implementation |
-|---|---|
-| No negative account balance | Validated before deduction in `expense_service` |
-| User data isolation | `@token_required` decorator injects `user_id`; all queries filter by it |
-| DB atomicity | Expense + reward + wallet update wrapped in single DB transaction |
-| One budget per month | Unique constraint on `(user_id, month)` |
-| Account type validation | SQL CHECK constraint: `bank`, `wallet`, `cash` |
-| Transaction type validation | SQL CHECK constraint: `EXPENSE_REWARD`, `BUDGET_REWARD` |
+| Phase | Status | Features |
+|-------|--------|---------|
+| Phase 1 | ✅ Done | Savings Goals, Health Score, Carbon Footprint |
+| Phase 2 | ✅ Done | 1-250 Challenge, Daily Savings, Eco Challenges |
+| Phase 3 | Planned | Gemini AI spending insights, budget recommendations, financial chatbot |
+| Phase 4 | Planned | Blockchain escrow (Sepolia testnet) for 1-250 challenge |
+| Phase 5 | Planned | PDF/CSV export, budget alerts, recurring income |
