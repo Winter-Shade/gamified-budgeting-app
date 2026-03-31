@@ -34,17 +34,17 @@ def get_calendar(user_id):
 
     daily_data = (
         db.session.query(
-            cast(Expense.created_at, Date).label("day"),
+            cast(Expense.expense_at, Date).label("day"),
             func.sum(Expense.amount).label("total"),
             func.count(Expense.id).label("count"),
         )
         .filter(
             Expense.user_id == user_id,
-            Expense.created_at >= start,
-            Expense.created_at < end,
+            Expense.expense_at >= start,
+            Expense.expense_at < end,
         )
-        .group_by(cast(Expense.created_at, Date))
-        .order_by(cast(Expense.created_at, Date))
+        .group_by(cast(Expense.expense_at, Date))
+        .order_by(cast(Expense.expense_at, Date))
         .all()
     )
 

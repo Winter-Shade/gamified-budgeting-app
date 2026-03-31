@@ -17,6 +17,7 @@ def add_expense(user_id):
     category_id = data.get("category_id")
     amount = data.get("amount")
     description = data.get("description")
+    expense_at = data.get("expense_at")
 
     if not all([account_id, category_id, amount]):
         return jsonify({"error": "account_id, category_id, and amount are required"}), 400
@@ -25,6 +26,7 @@ def add_expense(user_id):
         result = expense_service.add_expense(
             user_id, int(account_id), int(category_id), float(amount),
             description=description,
+            expense_at=expense_at,
         )
         return jsonify(result), 201
     except ValueError as e:

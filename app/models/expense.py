@@ -20,6 +20,10 @@ class Expense(db.Model):
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
+    # User-specified date/time for the expense (allows backdating)
+    expense_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
     def to_dict(self):
         return {
@@ -30,4 +34,5 @@ class Expense(db.Model):
             "amount": self.amount,
             "description": self.description,
             "created_at": self.created_at.isoformat(),
+            "expense_at": self.expense_at.isoformat() if self.expense_at else self.created_at.isoformat(),
         }

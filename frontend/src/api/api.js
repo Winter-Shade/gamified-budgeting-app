@@ -30,8 +30,8 @@ export const createBudget = (amount, month)=> fetchAPI('/budgets', { method: 'PO
 
 // ── Expenses ──────────────────────────────────────────────────────
 export const getExpenses   = (category_id) => fetchAPI(`/expenses${category_id ? `?category_id=${category_id}` : ''}`);
-export const addExpense    = (account_id, category_id, amount, description) =>
-  fetchAPI('/expenses', { method: 'POST', body: JSON.stringify({ account_id, category_id, amount, description }) });
+export const addExpense    = (account_id, category_id, amount, description, expense_at) =>
+  fetchAPI('/expenses', { method: 'POST', body: JSON.stringify({ account_id, category_id, amount, description, expense_at }) });
 export const updateExpense = (id, data)    => fetchAPI(`/expenses/${id}`, { method: 'PUT',    body: JSON.stringify(data) });
 export const deleteExpense = (id)          => fetchAPI(`/expenses/${id}`, { method: 'DELETE' });
 

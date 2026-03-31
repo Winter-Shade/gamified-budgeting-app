@@ -60,8 +60,8 @@ def get_monthly_summary(user_id: int, months: int = 6) -> list[dict]:
             db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
             .filter(
                 Expense.user_id == user_id,
-                Expense.created_at >= start,
-                Expense.created_at < end,
+                Expense.expense_at >= start,
+                Expense.expense_at < end,
             )
             .scalar()
         )
@@ -103,8 +103,8 @@ def _category_breakdown(user_id: int, start: datetime, end: datetime) -> list[di
         .join(Expense, Expense.category_id == Category.id)
         .filter(
             Expense.user_id == user_id,
-            Expense.created_at >= start,
-            Expense.created_at < end,
+            Expense.expense_at >= start,
+            Expense.expense_at < end,
         )
         .group_by(Category.name)
         .order_by(func.sum(Expense.amount).desc())
@@ -117,15 +117,15 @@ def _daily_trend(user_id: int) -> list[dict]:
     thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
     rows = (
         db.session.query(
-            cast(Expense.created_at, Date).label("day"),
+            cast(Expense.expense_at, Date).label("day"),
             func.sum(Expense.amount).label("total"),
         )
         .filter(
             Expense.user_id == user_id,
-            Expense.created_at >= thirty_days_ago,
+            Expense.expense_at >= thirty_days_ago,
         )
-        .group_by(cast(Expense.created_at, Date))
-        .order_by(cast(Expense.created_at, Date))
+        .group_by(cast(Expense.expense_at, Date))
+        .order_by(cast(Expense.expense_at, Date))
         .all()
     )
     return [{"date": day.isoformat(), "amount": round(float(total), 2)} for day, total in rows]
@@ -166,7 +166,7 @@ def _monthly_comparison(user_id: int, year: int, mon: int) -> dict:
     start, end = _month_range(year, mon)
     this_total = (
         db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
-        .filter(Expense.user_id == user_id, Expense.created_at >= start, Expense.created_at < end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= start, Expense.expense_at < end)
         .scalar()
     )
 
@@ -178,7 +178,7 @@ def _monthly_comparison(user_id: int, year: int, mon: int) -> dict:
     prev_start, prev_end = _month_range(prev_year, prev_mon)
     prev_total = (
         db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
-        .filter(Expense.user_id == user_id, Expense.created_at >= prev_start, Expense.created_at < prev_end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= prev_start, Expense.expense_at < prev_end)
         .scalar()
     )
 
@@ -186,7 +186,7 @@ def _monthly_comparison(user_id: int, year: int, mon: int) -> dict:
     ly_start, ly_end = _month_range(year - 1, mon)
     ly_total = (
         db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
-        .filter(Expense.user_id == user_id, Expense.created_at >= ly_start, Expense.created_at < ly_end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= ly_start, Expense.expense_at < ly_end)
         .scalar()
     )
 
@@ -225,7 +225,7 @@ def _spending_velocity(user_id: int, year: int, mon: int, budget_vs_actual: dict
     start, end = _month_range(year, mon)
     total_so_far = (
         db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
-        .filter(Expense.user_id == user_id, Expense.created_at >= start, Expense.created_at < end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= start, Expense.expense_at < end)
         .scalar()
     )
     total_so_far = float(total_so_far)
@@ -250,7 +250,7 @@ def _weekly_avg(user_id: int, start: datetime, end: datetime, year: int, mon: in
     """Average weekly spending for the month."""
     total = (
         db.session.query(func.coalesce(func.sum(Expense.amount), 0.0))
-        .filter(Expense.user_id == user_id, Expense.created_at >= start, Expense.created_at < end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= start, Expense.expense_at < end)
         .scalar()
     )
     days_in_month = monthrange(year, mon)[1]

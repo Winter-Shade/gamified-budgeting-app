@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 _here = os.path.dirname(os.path.abspath(__file__))
-_project_root = os.path.join(_here, "..", "..", "..", "..")
+_project_root = os.path.join(_here, "..", "..", "..")
 load_dotenv(os.path.join(_project_root, ".env"), override=True)
 
 mcp = FastMCP("Brave Search MCP Server")

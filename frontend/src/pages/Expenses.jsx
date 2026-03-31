@@ -14,7 +14,7 @@ const Expenses = () => {
   const [filterCategory, setFilterCategory] = useState('');
   const [editingId,  setEditingId]  = useState(null);
   const [editData,   setEditData]   = useState({});
-  const [formData,   setFormData]   = useState({ account_id: '', category_id: '', amount: '', description: '' });
+  const [formData,   setFormData]   = useState({ account_id: '', category_id: '', amount: '', description: '', expense_at: new Date().toISOString().slice(0, 16) });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -65,8 +65,14 @@ const Expenses = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); setIsSubmitting(true); setError('');
     try {
-      await addExpense(parseInt(formData.account_id), parseInt(formData.category_id), parseFloat(formData.amount), formData.description || null);
-      setFormData(p => ({ ...p, amount: '', description: '' }));
+      await addExpense(
+        parseInt(formData.account_id),
+        parseInt(formData.category_id),
+        parseFloat(formData.amount),
+        formData.description || null,
+        formData.expense_at ? new Date(formData.expense_at).toISOString() : null
+      );
+      setFormData(p => ({ ...p, amount: '', description: '', expense_at: new Date().toISOString().slice(0, 16) }));
       fetchData();
     } catch (err) { setError(err.message); }
     finally { setIsSubmitting(false); }
@@ -151,6 +157,13 @@ const Expenses = () => {
                   onChange={e => setFormData(p => ({ ...p, amount: e.target.value }))} required />
               </div>
 
+              <div className="flex-col gap-2" style={{ flex: 1, minWidth: '160px' }}>
+                <label style={styles.label}>Date & Time</label>
+                <input type="datetime-local" className="input-field input-rect"
+                  value={formData.expense_at}
+                  onChange={e => setFormData(p => ({ ...p, expense_at: e.target.value }))} />
+              </div>
+
               <div className="flex-col gap-2" style={{ flex: 2, minWidth: '160px' }}>
                 <label style={styles.label}>Description</label>
                 <input type="text" className="input-field input-rect" placeholder="What's this for?"
@@ -229,7 +242,7 @@ const Expenses = () => {
                         <div>
                           <p style={{ fontWeight:700, fontSize:'0.875rem' }}>{exp.description || cat.name}</p>
                           <p style={{ fontSize:'0.6875rem', color:'var(--on-surface-variant)' }}>
-                            {cat.name} · {getAccountName(exp.account_id)} · {new Date(exp.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
+                            {cat.name} · {getAccountName(exp.account_id)} · {new Date(exp.expense_at || exp.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })} {new Date(exp.expense_at || exp.created_at).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}
                           </p>
                         </div>
                       </div>

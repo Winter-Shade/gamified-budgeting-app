@@ -45,7 +45,7 @@ def login_user(email: str, password: str) -> dict:
 def _generate_token(user_id: int) -> str:
     payload = {
         "user_id": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=24),
+        "exp": datetime.now(timezone.utc) + timedelta(days=30),
         "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")

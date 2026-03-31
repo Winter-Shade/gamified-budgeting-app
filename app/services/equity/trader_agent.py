@@ -311,22 +311,19 @@ async def run_trader_agent(trader_id: int, app, do_trade: bool = True) -> dict:
             # Launch MCP subprocess servers
             market_mcp = await stack.enter_async_context(
                 MCPServerStdio(
-                    {"command": _PYTHON, "args": [_MARKET_SERVER]},
-                    env=mcp_env,
+                    {"command": _PYTHON, "args": [_MARKET_SERVER], "env": mcp_env},
                     client_session_timeout_seconds=120,
                 )
             )
             search_mcp = await stack.enter_async_context(
                 MCPServerStdio(
-                    {"command": _PYTHON, "args": [_SEARCH_SERVER]},
-                    env=mcp_env,
+                    {"command": _PYTHON, "args": [_SEARCH_SERVER], "env": mcp_env},
                     client_session_timeout_seconds=120,
                 )
             )
             fetch_mcp = await stack.enter_async_context(
                 MCPServerStdio(
-                    {"command": "uvx", "args": ["mcp-server-fetch"]},
-                    env={"PATH": os.environ.get("PATH", "")},
+                    {"command": "uvx", "args": ["mcp-server-fetch"], "env": {"PATH": os.environ.get("PATH", "")}},
                     client_session_timeout_seconds=60,
                 )
             )

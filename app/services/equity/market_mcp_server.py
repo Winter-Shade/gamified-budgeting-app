@@ -15,7 +15,7 @@ from mcp.server.fastmcp import FastMCP
 
 # Load env from the project root .env regardless of cwd
 _here = os.path.dirname(os.path.abspath(__file__))
-_project_root = os.path.join(_here, "..", "..", "..", "..")
+_project_root = os.path.join(_here, "..", "..", "..")
 load_dotenv(os.path.join(_project_root, ".env"), override=True)
 
 mcp = FastMCP("Market Data MCP Server")

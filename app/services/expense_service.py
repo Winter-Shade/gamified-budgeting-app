@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from app.extensions import db
 from app.models.expense import Expense
 from app.models.account import Account
@@ -7,7 +7,7 @@ from app.services.wallet_service import award_xp, XP_PER_EXPENSE
 
 def add_expense(
     user_id: int, account_id: int, category_id: int, amount: float,
-    description: str | None = None,
+    description: str | None = None, expense_at: str | None = None,
 ) -> dict:
     """
     Add an expense:
@@ -30,6 +30,16 @@ def add_expense(
             f"Insufficient balance. Available: {account.balance:.2f}, Required: {amount:.2f}"
         )
 
+    # Parse the user-supplied expense datetime
+    parsed_expense_at = None
+    if expense_at:
+        try:
+            parsed_expense_at = datetime.fromisoformat(expense_at.replace("Z", "+00:00"))
+            if parsed_expense_at.tzinfo is None:
+                parsed_expense_at = parsed_expense_at.replace(tzinfo=timezone.utc)
+        except (ValueError, AttributeError):
+            raise ValueError("expense_at must be in ISO format (e.g. 2026-03-15T14:30)")
+
     try:
         account.balance -= amount
 
@@ -39,6 +49,7 @@ def add_expense(
             category_id=category_id,
             amount=amount,
             description=description,
+            expense_at=parsed_expense_at or datetime.now(timezone.utc),
         )
         db.session.add(expense)
         db.session.flush()  # Get expense.id before challenge/XP updates
@@ -100,6 +111,15 @@ def update_expense(user_id: int, expense_id: int, **kwargs) -> dict:
             expense.category_id = int(kwargs["category_id"])
         if "description" in kwargs:
             expense.description = kwargs["description"]
+        if "expense_at" in kwargs and kwargs["expense_at"]:
+            try:
+                ea = kwargs["expense_at"]
+                parsed = datetime.fromisoformat(ea.replace("Z", "+00:00"))
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                expense.expense_at = parsed
+            except (ValueError, AttributeError):
+                raise ValueError("expense_at must be in ISO format")
 
         db.session.commit()
         return {"expense": expense.to_dict()}

@@ -76,15 +76,15 @@ def seed():
 
         sample_expenses = [
             Expense(user_id=user.id, account_id=accounts[1].id, category_id=food_cat.id,
-                    amount=25.0, description="Lunch", created_at=now - timedelta(days=1)),
+                    amount=25.0, description="Lunch", created_at=now - timedelta(days=1), expense_at=now - timedelta(days=1)),
             Expense(user_id=user.id, account_id=accounts[1].id, category_id=food_cat.id,
-                    amount=15.0, description="Coffee", created_at=now - timedelta(days=2)),
+                    amount=15.0, description="Coffee", created_at=now - timedelta(days=2), expense_at=now - timedelta(days=2)),
             Expense(user_id=user.id, account_id=accounts[0].id, category_id=transport_cat.id,
-                    amount=30.0, description="Uber ride", created_at=now - timedelta(days=2)),
+                    amount=30.0, description="Uber ride", created_at=now - timedelta(days=2), expense_at=now - timedelta(days=2)),
             Expense(user_id=user.id, account_id=accounts[2].id, category_id=shopping_cat.id,
-                    amount=50.0, description="New headphones", created_at=now - timedelta(days=3)),
+                    amount=50.0, description="New headphones", created_at=now - timedelta(days=3), expense_at=now - timedelta(days=3)),
             Expense(user_id=user.id, account_id=accounts[1].id, category_id=food_cat.id,
-                    amount=20.0, description="Dinner", created_at=now - timedelta(days=5)),
+                    amount=20.0, description="Dinner", created_at=now - timedelta(days=5), expense_at=now - timedelta(days=5)),
         ]
         # Adjust account balances for seeded expenses
         accounts[1].balance -= (25.0 + 15.0 + 20.0)  # 250 - 60 = 190

@@ -21,8 +21,8 @@ def get_monthly_carbon(user_id: int, month: str | None = None) -> dict:
         .join(Expense, Expense.category_id == Category.id)
         .filter(
             Expense.user_id == user_id,
-            Expense.created_at >= start,
-            Expense.created_at < end,
+            Expense.expense_at >= start,
+            Expense.expense_at < end,
         )
         .group_by(Category.name)
         .all()
@@ -66,8 +66,8 @@ def get_carbon_trend(user_id: int, months: int = 6) -> list[dict]:
             .join(Expense, Expense.category_id == Category.id)
             .filter(
                 Expense.user_id == user_id,
-                Expense.created_at >= start,
-                Expense.created_at < end,
+                Expense.expense_at >= start,
+                Expense.expense_at < end,
             )
             .group_by(Category.name)
             .all()

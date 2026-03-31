@@ -23,7 +23,7 @@ def list_categories(user_id):
 
     spending = dict(
         db.session.query(Expense.category_id, func.sum(Expense.amount))
-        .filter(Expense.user_id == user_id, Expense.created_at >= start, Expense.created_at < end)
+        .filter(Expense.user_id == user_id, Expense.expense_at >= start, Expense.expense_at < end)
         .group_by(Expense.category_id).all()
     )
     cat_budgets = {

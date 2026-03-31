@@ -320,31 +320,30 @@ export default function Trading() {
       {/* Run result toast */}
       {runResult && (
         <div style={{
-          background: runResult.errors?.length > 0 && runResult.executed_trades?.length === 0 ? 'rgba(248,113,113,0.1)' : 'rgba(16,217,160,0.1)',
-          border: `1px solid ${runResult.errors?.length > 0 && runResult.executed_trades?.length === 0 ? 'rgba(248,113,113,0.25)' : 'rgba(16,217,160,0.25)'}`,
+          background: runResult.errors?.length > 0 ? 'rgba(248,113,113,0.1)' : 'rgba(16,217,160,0.1)',
+          border: `1px solid ${runResult.errors?.length > 0 ? 'rgba(248,113,113,0.25)' : 'rgba(16,217,160,0.25)'}`,
           borderRadius:14, padding:'1rem 1.25rem',
         }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-            <div>
+            <div style={{ flex:1, minWidth:0, marginRight:'0.75rem' }}>
               <p style={{ fontWeight:700, fontSize:'0.875rem', marginBottom:4 }}>
-                {runResult.trader_name} — Run Complete
+                {runResult.trader_name} — {runResult.session === 'trade' ? 'Trade' : 'Rebalance'} Session Complete
               </p>
-              {runResult.executed_trades?.length > 0 ? (
-                <div>
-                  {runResult.executed_trades.map((t,i) => (
-                    <p key={i} style={{ fontSize:'0.8125rem', color:'var(--on-surface-variant)' }}>
-                      {t.action === 'buy' ? '✓ Bought' : '✓ Sold'} {t.quantity} × {t.symbol} @ {fmt(t.price)} — {t.rationale}
-                    </p>
-                  ))}
-                </div>
+              {runResult.summary ? (
+                <p style={{ fontSize:'0.8125rem', color:'var(--on-surface-variant)', lineHeight:1.5 }}>{runResult.summary}</p>
               ) : (
-                <p style={{ fontSize:'0.8125rem', color:'var(--on-surface-variant)' }}>No trades executed (AI decided to hold)</p>
+                <p style={{ fontSize:'0.8125rem', color:'var(--on-surface-variant)' }}>Session complete — check transaction history for details.</p>
               )}
               {runResult.errors?.map((e,i) => (
-                <p key={i} style={{ fontSize:'0.8125rem', color:'var(--error)', marginTop:2 }}>⚠ {e}</p>
+                <p key={i} style={{ fontSize:'0.8125rem', color:'var(--error)', marginTop:4 }}>⚠ {e}</p>
               ))}
+              {runResult.run_at && (
+                <p style={{ fontSize:'0.7rem', color:'var(--on-surface-variant)', marginTop:6 }}>
+                  {new Date(runResult.run_at).toLocaleString('en', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}
+                </p>
+              )}
             </div>
-            <button className="btn-ghost" style={{ padding:4 }} onClick={() => setRunResult(null)}><X size={14} /></button>
+            <button className="btn-ghost" style={{ padding:4, flexShrink:0 }} onClick={() => setRunResult(null)}><X size={14} /></button>
           </div>
         </div>
       )}
