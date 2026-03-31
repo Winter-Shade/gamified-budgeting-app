@@ -87,3 +87,34 @@ export const getSubscriptions    = ()           => fetchAPI('/subscriptions');
 export const createSubscription  = (data)       => fetchAPI('/subscriptions', { method: 'POST', body: JSON.stringify(data) });
 export const updateSubscription  = (id, data)   => fetchAPI(`/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteSubscription  = (id)         => fetchAPI(`/subscriptions/${id}`, { method: 'DELETE' });
+
+// ── Savings Goals ─────────────────────────────────────────────────
+export const getGoals       = ()               => fetchAPI('/goals');
+export const createGoal     = (data)           => fetchAPI('/goals', { method: 'POST', body: JSON.stringify(data) });
+export const updateGoal     = (id, data)       => fetchAPI(`/goals/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteGoal     = (id)             => fetchAPI(`/goals/${id}`, { method: 'DELETE' });
+export const contributeGoal = (id, amount)     => fetchAPI(`/goals/${id}/contribute`, { method: 'POST', body: JSON.stringify({ amount }) });
+
+// ── Financial Health Score ────────────────────────────────────────
+export const getHealthScore = () => fetchAPI('/health-score');
+
+// ── Carbon Footprint ──────────────────────────────────────────────
+export const getCarbonMonthly = (month)      => fetchAPI(`/carbon/monthly${month ? `?month=${month}` : ''}`);
+export const getCarbonTrend   = (months = 6) => fetchAPI(`/carbon/trend?months=${months}`);
+
+// ── 1-250 Savings Challenge ───────────────────────────────────────
+export const getChallenge250   = ()                        => fetchAPI('/challenge-250');
+export const startChallenge250 = (mode, account_id)        => fetchAPI('/challenge-250/start', { method: 'POST', body: JSON.stringify({ mode, account_id }) });
+export const checkStep250      = (step)                    => fetchAPI('/challenge-250/check',  { method: 'POST', body: JSON.stringify({ step }) });
+export const uncheckStep250    = (step)                    => fetchAPI('/challenge-250/uncheck', { method: 'POST', body: JSON.stringify({ step }) });
+export const resetChallenge250 = ()                        => fetchAPI('/challenge-250/reset',  { method: 'POST' });
+
+// ── Daily Savings Challenge ───────────────────────────────────────
+export const getDailySavings      = ()           => fetchAPI('/daily-savings');
+export const startDailySavings    = (daily_amount) => fetchAPI('/daily-savings/start',   { method: 'POST', body: JSON.stringify({ daily_amount }) });
+export const dailySavingsCheckIn  = ()           => fetchAPI('/daily-savings/check-in',  { method: 'POST' });
+export const dailySavingsGrace    = ()           => fetchAPI('/daily-savings/grace',      { method: 'POST' });
+export const stopDailySavings     = ()           => fetchAPI('/daily-savings/stop',       { method: 'POST' });
+
+// ── Eco Challenge Templates ───────────────────────────────────────
+export const getEcoTemplates = () => fetchAPI('/challenges/eco-templates');
