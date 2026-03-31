@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Receipt, CreditCard, PiggyBank,
   BarChart2, CalendarDays, Zap, Trophy, Users,
   TrendingUp, LogOut, Wallet, MonitorPlay, Tag,
+  Target, Leaf, Hash, Flame,
 } from 'lucide-react';
 
 const NAV = [
@@ -31,6 +32,15 @@ const NAV = [
       { to: '/challenges',  icon: Zap,   label: 'Challenges'  },
       { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
       { to: '/friends',     icon: Users,  label: 'Friends'     },
+    ],
+  },
+  {
+    group: 'Sustainable',
+    items: [
+      { to: '/goals',         icon: Target, label: 'Savings Goals' },
+      { to: '/carbon',        icon: Leaf,   label: 'Carbon Footprint' },
+      { to: '/challenge-250', icon: Hash,   label: '1-250 Challenge' },
+      { to: '/daily-savings', icon: Flame,  label: 'Daily Savings' },
     ],
   },
   {

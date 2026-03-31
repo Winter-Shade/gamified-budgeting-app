@@ -17,6 +17,10 @@ import Friends      from './pages/Friends';
 import Trading      from './pages/Trading';
 import Subscriptions from './pages/Subscriptions';
 import Categories    from './pages/Categories';
+import Goals         from './pages/Goals';
+import Carbon        from './pages/Carbon';
+import Challenge250  from './pages/Challenge250';
+import DailySavings  from './pages/DailySavings';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +59,10 @@ function App() {
               <Route path="trading"       element={<Trading />} />
               <Route path="subscriptions" element={<Subscriptions />} />
               <Route path="categories"    element={<Categories />} />
+              <Route path="goals"          element={<Goals />} />
+              <Route path="carbon"         element={<Carbon />} />
+              <Route path="challenge-250"  element={<Challenge250 />} />
+              <Route path="daily-savings"  element={<DailySavings />} />
             </Route>
           </Routes>
         </BrowserRouter>

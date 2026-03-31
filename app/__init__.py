@@ -28,6 +28,11 @@ def create_app(config_class=Config):
     from app.routes.wallet import wallet_bp
     from app.routes.subscriptions import subscriptions_bp
     from app.routes.categories import categories_bp
+    from app.routes.savings_goals import savings_goals_bp
+    from app.routes.health_score import health_score_bp
+    from app.routes.carbon import carbon_bp
+    from app.routes.challenge_250 import challenge_250_bp
+    from app.routes.daily_savings import daily_savings_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(accounts_bp, url_prefix="/accounts")
@@ -43,6 +48,11 @@ def create_app(config_class=Config):
     app.register_blueprint(wallet_bp, url_prefix="/wallet")
     app.register_blueprint(subscriptions_bp, url_prefix="/subscriptions")
     app.register_blueprint(categories_bp, url_prefix="/categories")
+    app.register_blueprint(savings_goals_bp, url_prefix="/goals")
+    app.register_blueprint(health_score_bp, url_prefix="/health-score")
+    app.register_blueprint(carbon_bp, url_prefix="/carbon")
+    app.register_blueprint(challenge_250_bp, url_prefix="/challenge-250")
+    app.register_blueprint(daily_savings_bp, url_prefix="/daily-savings")
 
     # ── Create tables ──────────────────────────────────────────
     with app.app_context():
@@ -51,7 +61,8 @@ def create_app(config_class=Config):
             streak, challenge, challenge_participant,
             rewards_catalog, redemption, friendship,
             trading_account, trading_trader, trading_holding, trading_transaction,
-            subscription, category_budget,
+            subscription, category_budget, savings_goal,
+            challenge_250, daily_savings,
         )
         db.create_all()
 

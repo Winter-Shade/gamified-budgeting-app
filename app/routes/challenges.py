@@ -61,6 +61,14 @@ def join_challenge(user_id, challenge_id):
         return jsonify({"error": str(e)}), 400
 
 
+@challenges_bp.route("/eco-templates", methods=["GET"])
+@token_required
+def eco_templates(user_id):
+    """GET /challenges/eco-templates — preset eco challenge templates."""
+    from app.services.eco_templates import get_templates
+    return jsonify(get_templates()), 200
+
+
 @challenges_bp.route("/check-completions", methods=["POST"])
 @token_required
 def check_completions(user_id):

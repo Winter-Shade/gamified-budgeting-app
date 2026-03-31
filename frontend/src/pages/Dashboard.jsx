@@ -2,13 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { getDashboard, getAnalytics, getMyChallenges, getAccounts } from '../api/api';
+import { getDashboard, getAnalytics, getMyChallenges, getAccounts, getHealthScore, getGoals } from '../api/api';
 import { useWallet } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   Wallet, TrendingDown, ShieldCheck, Zap, Coins,
-  ArrowRight, Flame, Target, Ban, CheckCircle2, Circle, Plus,
+  ArrowRight, Flame, Target, Ban, CheckCircle2, Circle, Plus, HeartPulse,
 } from 'lucide-react';
 
 const CHALLENGE_ICONS = { streak: Flame, budget_limit: Target, no_spend: Ban };
@@ -41,15 +41,22 @@ export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [accounts, setAccounts]   = useState([]);
+  const [healthScore, setHealthScore] = useState(null);
+  const [goals, setGoals]         = useState([]);
   const [loading, setLoading]     = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const [d, a, c, accs] = await Promise.all([getDashboard(), getAnalytics(), getMyChallenges(), getAccounts()]);
+      const [d, a, c, accs, hs, g] = await Promise.all([
+        getDashboard(), getAnalytics(), getMyChallenges(), getAccounts(),
+        getHealthScore(), getGoals(),
+      ]);
       setDash(d);
       setAnalytics(a);
       setChallenges(c.filter(ch => ch.my_status === 'active').slice(0, 3));
       setAccounts(accs);
+      setHealthScore(hs);
+      setGoals(g.filter(goal => !goal.completed).slice(0, 3));
       refreshWallet();
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -326,6 +333,102 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Health Score + Goals Row */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:'1rem' }}>
+        {/* Financial Health Score */}
+        <div className="card" style={{ padding:'1.25rem', display:'flex', flexDirection:'column', gap:'0.875rem' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <HeartPulse size={16} color="var(--primary)" />
+            <span className="section-title">Health Score</span>
+          </div>
+          {healthScore ? (
+            <>
+              {/* Semi-circular gauge (CSS arc) */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                <div style={{ position:'relative', width:120, height:60, overflow:'hidden' }}>
+                  <div style={{
+                    position:'absolute', bottom:0, left:0, right:0,
+                    width:120, height:120,
+                    borderRadius:'50%',
+                    background:`conic-gradient(
+                      ${healthScore.score >= 85 ? 'var(--tertiary)' : healthScore.score >= 55 ? '#9D85FF' : 'var(--error)'} ${healthScore.score * 1.8}deg,
+                      var(--outline) 0deg
+                    )`,
+                    transform:'rotate(-90deg)',
+                  }} />
+                  <div style={{
+                    position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)',
+                    width:84, height:84,
+                    borderRadius:'50%',
+                    background:'var(--surface-container)',
+                    bottom: -42,
+                  }} />
+                </div>
+                <p style={{ fontSize:'1.625rem', fontWeight:900, letterSpacing:'-0.04em', marginTop:-4 }} className="gradient-text">{healthScore.score}</p>
+                <p style={{ fontSize:'0.75rem', fontWeight:700, color: healthScore.score >= 85 ? 'var(--tertiary)' : healthScore.score >= 55 ? 'var(--primary-dim)' : 'var(--error)' }}>
+                  {healthScore.grade}
+                </p>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:'0.375rem' }}>
+                {Object.entries(healthScore.components).map(([key, comp]) => (
+                  <div key={key} style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
+                    <span style={{ fontSize:'0.65rem', color:'var(--on-surface-variant)', width:100, flexShrink:0 }}>
+                      {key.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </span>
+                    <div className="progress-track" style={{ flex:1, height:4 }}>
+                      <div className="progress-fill progress-primary" style={{ width:`${comp.score}%` }} />
+                    </div>
+                    <span style={{ fontSize:'0.65rem', fontWeight:700, color:'var(--primary-dim)', width:26, textAlign:'right' }}>{comp.score}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="empty-state"><p>No data yet</p></div>
+          )}
+          <button className="btn-ghost" style={{ fontSize:'0.75rem', marginTop:'auto' }} onClick={() => navigate('/goals')}>
+            View Goals <ArrowRight size={12} />
+          </button>
+        </div>
+
+        {/* Active Savings Goals */}
+        <div className="card" style={{ padding:'1.25rem' }}>
+          <div className="section-header" style={{ marginBottom:'0.875rem' }}>
+            <span className="section-title">Savings Goals</span>
+            <button className="btn-ghost" style={{ fontSize:'0.75rem', padding:'4px 8px', gap:4 }} onClick={() => navigate('/goals')}>
+              View all <ArrowRight size={12} />
+            </button>
+          </div>
+          {goals.length === 0 ? (
+            <div className="empty-state" style={{ padding:'1.5rem 0' }}>
+              <Target size={24} style={{ margin:'0 auto 8px', display:'block', color:'var(--on-surface-variant)' }} />
+              <p style={{ fontSize:'0.8125rem' }}>No active goals</p>
+              <button className="btn-primary" style={{ marginTop:10, fontSize:'0.75rem' }} onClick={() => navigate('/goals')}>
+                Set a Goal
+              </button>
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+              {goals.map(g => (
+                <div key={g.id} style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontWeight:700, fontSize:'0.8125rem' }}>{g.name}</span>
+                    <span style={{ fontSize:'0.7rem', color:'var(--primary-dim)', fontWeight:700 }}>{g.progress_pct}%</span>
+                  </div>
+                  <div className="progress-track" style={{ height:5 }}>
+                    <div className="progress-fill progress-primary" style={{ width:`${Math.min(100,g.progress_pct)}%` }} />
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span style={{ fontSize:'0.65rem', color:'var(--on-surface-variant)' }}>₹{Number(g.current_amount).toLocaleString('en-IN')}</span>
+                    <span style={{ fontSize:'0.65rem', color:'var(--on-surface-variant)' }}>₹{Number(g.target_amount).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
