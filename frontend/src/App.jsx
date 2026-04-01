@@ -21,6 +21,7 @@ import Goals         from './pages/Goals';
 import Carbon        from './pages/Carbon';
 import Challenge250  from './pages/Challenge250';
 import DailySavings  from './pages/DailySavings';
+import BlockchainSavings from './pages/BlockchainSavings';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -63,6 +64,7 @@ function App() {
               <Route path="carbon"         element={<Carbon />} />
               <Route path="challenge-250"  element={<Challenge250 />} />
               <Route path="daily-savings"  element={<DailySavings />} />
+              <Route path="blockchain-savings" element={<BlockchainSavings />} />
             </Route>
           </Routes>
         </BrowserRouter>

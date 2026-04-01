@@ -118,3 +118,12 @@ export const stopDailySavings     = ()           => fetchAPI('/daily-savings/sto
 
 // ── Eco Challenge Templates ───────────────────────────────────────
 export const getEcoTemplates = () => fetchAPI('/challenges/eco-templates');
+
+// ── Blockchain Savings ────────────────────────────────────────────
+export const getBlockchainPlans     = ()                    => fetchAPI('/blockchain/plans');
+export const createBlockchainPlan   = (data)                => fetchAPI('/blockchain/plans', { method: 'POST', body: JSON.stringify(data) });
+export const getBlockchainDeposits  = (planId)              => fetchAPI(`/blockchain/plans/${planId}/deposits`);
+export const recordBlockchainDeposit= (planId, data)        => fetchAPI(`/blockchain/plans/${planId}/deposits`, { method: 'POST', body: JSON.stringify(data) });
+export const updateBlockchainStatus = (planId, status)      => fetchAPI(`/blockchain/plans/${planId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+export const updateBlockchainOnchain= (planId, data)        => fetchAPI(`/blockchain/plans/${planId}/onchain`, { method: 'PUT', body: JSON.stringify(data) });
+export const getContractInfo        = ()                    => fetchAPI('/blockchain/contract-info');
