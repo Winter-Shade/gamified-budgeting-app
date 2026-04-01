@@ -1,3 +1,4 @@
+require("dotenv").config({ path: require("path").resolve(__dirname, "..", ".env") });
 require("@nomicfoundation/hardhat-toolbox");
 
 /** @type import('hardhat/config').HardhatUserConfig */

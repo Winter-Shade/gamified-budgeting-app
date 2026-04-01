@@ -33,6 +33,7 @@ def create_app(config_class=Config):
     from app.routes.carbon import carbon_bp
     from app.routes.challenge_250 import challenge_250_bp
     from app.routes.daily_savings import daily_savings_bp
+    from app.routes.blockchain import blockchain_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(accounts_bp, url_prefix="/accounts")
@@ -53,6 +54,7 @@ def create_app(config_class=Config):
     app.register_blueprint(carbon_bp, url_prefix="/carbon")
     app.register_blueprint(challenge_250_bp, url_prefix="/challenge-250")
     app.register_blueprint(daily_savings_bp, url_prefix="/daily-savings")
+    app.register_blueprint(blockchain_bp, url_prefix="/blockchain")
 
     # ── Create tables ──────────────────────────────────────────
     with app.app_context():
@@ -62,7 +64,7 @@ def create_app(config_class=Config):
             rewards_catalog, redemption, friendship,
             trading_account, trading_trader, trading_holding, trading_transaction,
             subscription, category_budget, savings_goal,
-            challenge_250, daily_savings,
+            challenge_250, daily_savings, blockchain_savings,
         )
         db.create_all()
 

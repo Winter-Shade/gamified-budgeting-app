@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Receipt, CreditCard, PiggyBank,
   BarChart2, CalendarDays, Zap, Trophy, Users,
   TrendingUp, LogOut, Wallet, MonitorPlay, Tag,
-  Target, Leaf, Hash, Flame,
+  Target, Leaf, Hash, Flame, Lock,
 } from 'lucide-react';
 
 const NAV = [
@@ -41,6 +41,7 @@ const NAV = [
       { to: '/carbon',        icon: Leaf,   label: 'Carbon Footprint' },
       { to: '/challenge-250', icon: Hash,   label: '1-250 Challenge' },
       { to: '/daily-savings', icon: Flame,  label: 'Daily Savings' },
+      { to: '/blockchain-savings', icon: Lock, label: 'Blockchain Savings', beta: true },
     ],
   },
   {
