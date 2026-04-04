@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   getTradingAccounts, createTradingAccount, updateTradingAccount,
   getTraders, createTrader, updateTrader, deleteTrader, runTrader,
@@ -21,15 +22,16 @@ function fmt(n, prefix='$') { return `${prefix}${Number(n ?? 0).toLocaleString('
 
 function Modal({ open, onClose, children }) {
   if (!open) return null;
-  return (
-    <div className="modal-overlay" onClick={onClose}>
+  return createPortal(
+    <div className="modal-overlay trading-light-theme" onClick={onClose} style={{ margin:0, padding:0, minHeight:'auto', background:'rgba(0,0,0,0.4)' }}>
       <div className="modal-card" onClick={e => e.stopPropagation()} style={{ position:'relative' }}>
         <button onClick={onClose} style={{ position:'absolute', top:16, right:16, background:'none', border:'none', cursor:'pointer', color:'var(--on-surface-variant)' }}>
           <X size={18} />
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -41,8 +43,9 @@ function AccountCard({ acc, selected, onClick, onReset }) {
       onClick={onClick}
       style={{
         padding:'1rem 1.25rem', borderRadius:14, cursor:'pointer',
-        background: selected ? 'rgba(109,82,232,0.08)' : 'var(--surface-container)',
-        border: selected ? '1px solid rgba(109,82,232,0.3)' : '1px solid var(--outline)',
+        background: selected ? '#ffffff' : 'var(--surface-container)',
+        border: selected ? '2px solid rgba(109,82,232,0.4)' : '1px solid var(--outline)',
+        boxShadow: selected ? '0 2px 12px rgba(109,82,232,0.12)' : 'none',
         transition:'all 0.2s',
         display:'flex', flexDirection:'column', gap:4,
       }}
@@ -248,7 +251,7 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'0.75rem' }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
-              <div style={{ width:32, height:32, background:'linear-gradient(135deg,#6d52e8,#9D85FF)', borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>🤖</div>
+              <div style={{ width:32, height:32, background:'linear-gradient(135deg,#6d52e8,#a78bfa)', borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0, boxShadow:'0 2px 8px rgba(109,82,232,0.25)' }}>🤖</div>
               <div>
                 <p style={{ fontWeight:700, fontSize:'0.9375rem' }}>{trader.name}</p>
                 <span className="badge badge-primary" style={{ fontSize:'0.6rem' }}>{trader.model}</span>
@@ -273,8 +276,8 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
         </div>
 
         {/* Approval toggle */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:'0.75rem', padding:'6px 10px', background:'var(--surface-container-high)', borderRadius:10 }}>
-          <Shield size={12} color="var(--on-surface-variant)" />
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:'0.75rem', padding:'8px 12px', background:'rgba(109,82,232,0.04)', border:'1px solid rgba(109,82,232,0.08)', borderRadius:12 }}>
+          <Shield size={12} color="#6d52e8" />
           <span style={{ fontSize:'0.75rem', color:'var(--on-surface-variant)', flex:1 }}>Require approval</span>
           <button
             className={`toggle-switch ${trader.require_approval ? 'active' : ''}`}
@@ -480,18 +483,43 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
         <h3 style={{ fontWeight:800, fontSize:'1.125rem', marginBottom:'1.25rem' }}>Import Portfolio (CSV)</h3>
         <div style={{ display:'flex', flexDirection:'column', gap:'0.875rem' }}>
           <p style={{ fontSize:'0.8125rem', color:'var(--on-surface-variant)' }}>
-            Paste CSV with columns: <b>symbol,quantity</b>
+            Upload a CSV file with columns: <b>symbol,quantity</b>
           </p>
-          <textarea
-            className="input-field input-area"
-            value={csvContent}
-            onChange={e => setCsvContent(e.target.value)}
-            placeholder={"symbol,quantity\nAAPL,10\nGOOG,5\nSPY,20"}
-            style={{ minHeight:120, fontFamily:'monospace', fontSize:'0.8125rem' }}
-          />
+          <label style={{
+            display:'flex', flexDirection:'column', alignItems:'center', gap:8,
+            padding:'1.5rem', border:'2px dashed rgba(109,82,232,0.25)', borderRadius:16,
+            cursor:'pointer', background:'rgba(109,82,232,0.03)', transition:'all 0.15s',
+          }}
+            onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor='rgba(109,82,232,0.5)'; e.currentTarget.style.background='rgba(109,82,232,0.06)'; }}
+            onDragLeave={e => { e.currentTarget.style.borderColor='rgba(109,82,232,0.25)'; e.currentTarget.style.background='rgba(109,82,232,0.03)'; }}
+            onDrop={e => {
+              e.preventDefault();
+              e.currentTarget.style.borderColor='rgba(109,82,232,0.25)';
+              e.currentTarget.style.background='rgba(109,82,232,0.03)';
+              const file = e.dataTransfer.files[0];
+              if (file) file.text().then(t => setCsvContent(t));
+            }}
+          >
+            <Upload size={24} color="#6d52e8" />
+            <span style={{ fontSize:'0.8125rem', fontWeight:600, color:'var(--on-surface)' }}>
+              {csvContent ? 'File loaded — click to replace' : 'Click to upload or drag & drop'}
+            </span>
+            <span style={{ fontSize:'0.75rem', color:'var(--on-surface-variant)' }}>.csv files only</span>
+            <input type="file" accept=".csv,text/csv" style={{ display:'none' }}
+              onChange={e => {
+                const file = e.target.files[0];
+                if (file) file.text().then(t => setCsvContent(t));
+              }}
+            />
+          </label>
+          {csvContent && (
+            <div style={{ background:'var(--surface-container-high)', borderRadius:12, padding:'0.75rem', maxHeight:120, overflow:'auto' }}>
+              <pre style={{ fontSize:'0.75rem', fontFamily:'monospace', color:'var(--on-surface-variant)', margin:0, whiteSpace:'pre-wrap' }}>{csvContent}</pre>
+            </div>
+          )}
           <div style={{ display:'flex', gap:8 }}>
-            <button className="btn-secondary" style={{ flex:1 }} onClick={() => setShowCsvModal(false)}>Cancel</button>
-            <button className="btn-primary" style={{ flex:2 }} onClick={handleCsvImport} disabled={csvLoading}>
+            <button className="btn-secondary" style={{ flex:1 }} onClick={() => { setShowCsvModal(false); setCsvContent(''); }}>Cancel</button>
+            <button className="btn-primary" style={{ flex:2 }} onClick={handleCsvImport} disabled={csvLoading || !csvContent.trim()}>
               {csvLoading ? 'Importing...' : 'Import'}
             </button>
           </div>
