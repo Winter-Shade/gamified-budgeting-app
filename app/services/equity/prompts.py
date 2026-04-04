@@ -21,13 +21,21 @@ The current datetime is {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}.
 """
 
 
-def trader_instructions(name: str, identity: str | None, strategy: str) -> str:
+def trader_instructions(name: str, identity: str | None, strategy: str, suggestion_mode: bool = False) -> str:
     identity_line = f"\nYour persona: {identity}" if identity else ""
+    mode_note = ""
+    if suggestion_mode:
+        mode_note = """
+IMPORTANT: You are in SUGGESTION MODE. When you call buy_shares or sell_shares,
+your trades will NOT execute immediately. Instead, they become suggestions that
+the human owner must approve or reject. Be thorough in your rationale —
+the human will read it to decide whether to approve.
+"""
     return f"""You are {name}, an AI stock trader.{identity_line}
 
 Your investment strategy:
 {strategy}
-
+{mode_note}
 You have access to:
 - A Researcher tool: call it to get financial news and market analysis
 - Market data tools: look up real-time stock prices

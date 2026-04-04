@@ -10,7 +10,7 @@ Routes:
   POST   /trading/traders               — Create trader
   GET    /trading/traders               — List traders (optionally filtered by account)
   GET    /trading/traders/<id>          — Get single trader with holdings + portfolio value
-  PUT    /trading/traders/<id>          — Update trader (name, strategy, model, identity)
+  PUT    /trading/traders/<id>          — Update trader (name, strategy, model, identity, require_approval)
   DELETE /trading/traders/<id>          — Delete trader
 
   POST   /trading/traders/<id>/run      — Run trader once (synchronous)
@@ -19,7 +19,17 @@ Routes:
   GET    /trading/traders/<id>/transactions — Transaction history
   GET    /trading/traders/<id>/portfolio-history — Portfolio value over time
 
+  POST   /trading/transfer              — Transfer funds from user account to trading account
+  POST   /trading/traders/<id>/import-csv — Import portfolio from CSV
+
+  GET    /trading/traders/<id>/suggestions — List suggestions
+  POST   /trading/suggestions/<id>/resolve — Approve or reject a suggestion
+  POST   /trading/suggestions/bulk-resolve — Bulk approve/reject suggestions
+
+  POST   /trading/traders/<id>/strategy-advisor — Get AI strategy advice
+
   GET    /trading/market/quote/<symbol> — Live stock price
+  GET    /trading/user-accounts         — List user's bank accounts for fund transfer
 """
 from flask import Blueprint, request, jsonify
 from app.routes import token_required
@@ -74,6 +84,44 @@ def delete_account(user_id, account_id):
         return jsonify({"error": str(e)}), 404
 
 
+# ── Fund Transfer ─────────────────────────────────────────────────────────────
+
+@trading_bp.route("/transfer", methods=["POST"])
+@token_required
+def transfer_funds(user_id):
+    """Transfer funds from a user bank account to a trading account."""
+    data = request.get_json(silent=True) or {}
+    source_account_id = data.get("source_account_id")
+    trading_account_id = data.get("trading_account_id")
+    try:
+        amount = float(data.get("amount", 0))
+    except (TypeError, ValueError):
+        return jsonify({"error": "amount must be a number"}), 400
+
+    if not source_account_id or not trading_account_id:
+        return jsonify({"error": "source_account_id and trading_account_id are required"}), 400
+
+    try:
+        result = trading_service.transfer_funds_to_account(
+            user_id, int(source_account_id), int(trading_account_id), amount
+        )
+        return jsonify(result), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@trading_bp.route("/user-accounts", methods=["GET"])
+@token_required
+def list_user_accounts(user_id):
+    """List user's bank accounts (for fund transfer source selection)."""
+    from app.models.account import Account
+    accounts = Account.query.filter_by(user_id=user_id).all()
+    return jsonify([
+        {"id": a.id, "name": a.name, "balance": round(a.balance, 2), "type": a.type}
+        for a in accounts
+    ]), 200
+
+
 # ── Traders ───────────────────────────────────────────────────────────────────
 
 @trading_bp.route("/traders", methods=["POST"])
@@ -93,6 +141,7 @@ def create_trader(user_id):
             strategy=str(data["strategy"]),
             identity=data.get("identity"),
             model=data.get("model", "gemini-2.0-flash"),
+            require_approval=bool(data.get("require_approval", False)),
         )
         return jsonify(result), 201
     except ValueError as e:
@@ -135,6 +184,23 @@ def delete_trader(user_id, trader_id):
         return jsonify({"error": str(e)}), 404
 
 
+# ── CSV Portfolio Import ──────────────────────────────────────────────────────
+
+@trading_bp.route("/traders/<int:trader_id>/import-csv", methods=["POST"])
+@token_required
+def import_csv(user_id, trader_id):
+    """Import a portfolio from CSV. Accepts JSON body with csv_content string."""
+    data = request.get_json(silent=True) or {}
+    csv_content = data.get("csv_content", "")
+    if not csv_content.strip():
+        return jsonify({"error": "csv_content is required"}), 400
+    try:
+        result = trading_service.import_portfolio_csv(user_id, trader_id, csv_content)
+        return jsonify(result), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
 # ── Run & Schedule ────────────────────────────────────────────────────────────
 
 @trading_bp.route("/traders/<int:trader_id>/run", methods=["POST"])
@@ -157,11 +223,6 @@ def run_trader_once(user_id, trader_id):
 @trading_bp.route("/traders/<int:trader_id>/schedule", methods=["POST"])
 @token_required
 def set_schedule(user_id, trader_id):
-    """
-    POST /trading/traders/<id>/schedule
-    Body: {"interval": "hourly", "active": true}
-    Intervals: manual | hourly | every_6h | every_12h | daily | weekly
-    """
     data = request.get_json(silent=True) or {}
     interval = data.get("interval", "manual")
     active = bool(data.get("active", True))
@@ -201,6 +262,68 @@ def portfolio_history(user_id, trader_id):
         return jsonify(trading_service.get_portfolio_value_history(user_id, trader_id)), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
+
+
+# ── Suggestions ───────────────────────────────────────────────────────────────
+
+@trading_bp.route("/traders/<int:trader_id>/suggestions", methods=["GET"])
+@token_required
+def get_suggestions(user_id, trader_id):
+    status = request.args.get("status")
+    try:
+        return jsonify(trading_service.get_suggestions(user_id, trader_id, status=status)), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+
+
+@trading_bp.route("/suggestions/<int:suggestion_id>/resolve", methods=["POST"])
+@token_required
+def resolve_suggestion(user_id, suggestion_id):
+    data = request.get_json(silent=True) or {}
+    action = data.get("action")
+    if action not in ("approve", "reject"):
+        return jsonify({"error": "action must be 'approve' or 'reject'"}), 400
+    try:
+        result = trading_service.resolve_suggestion(user_id, suggestion_id, action)
+        return jsonify(result), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@trading_bp.route("/suggestions/bulk-resolve", methods=["POST"])
+@token_required
+def bulk_resolve(user_id):
+    data = request.get_json(silent=True) or {}
+    ids = data.get("suggestion_ids", [])
+    action = data.get("action")
+    if action not in ("approve", "reject"):
+        return jsonify({"error": "action must be 'approve' or 'reject'"}), 400
+    if not ids:
+        return jsonify({"error": "suggestion_ids required"}), 400
+    results = trading_service.bulk_resolve_suggestions(user_id, ids, action)
+    return jsonify(results), 200
+
+
+# ── Strategy Advisor ──────────────────────────────────────────────────────────
+
+@trading_bp.route("/traders/<int:trader_id>/strategy-advisor", methods=["POST"])
+@token_required
+def strategy_advisor(user_id, trader_id):
+    """Get AI-powered strategy analysis and recommendations."""
+    try:
+        analysis = trading_service.get_strategy_analysis(user_id, trader_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+
+    data = request.get_json(silent=True) or {}
+    user_question = data.get("question", "")
+
+    from app.services.strategy_advisor import get_strategy_advice
+    try:
+        advice = get_strategy_advice(analysis, user_question)
+        return jsonify(advice), 200
+    except Exception as e:
+        return jsonify({"error": f"Strategy advisor failed: {str(e)}"}), 500
 
 
 # ── Market Data ───────────────────────────────────────────────────────────────

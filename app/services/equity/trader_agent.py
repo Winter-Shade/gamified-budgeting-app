@@ -55,10 +55,12 @@ def _get_model(model_name: str = "gemini-2.0-flash") -> LitellmModel:
 
 # ── In-process account tools (write directly to Flask's PostgreSQL) ───────────
 
-def _make_account_tools(trader_id: int, account_id: int, app):
+def _make_account_tools(trader_id: int, account_id: int, app, suggestion_mode: bool = False):
     """
     Return a list of function_tool-decorated callables that operate
     on the Flask DB inside an explicit app context.
+
+    If suggestion_mode=True, buy/sell create suggestions instead of executing trades.
     """
 
     @function_tool
@@ -118,6 +120,7 @@ def _make_account_tools(trader_id: int, account_id: int, app):
             from app.models.trading_account import TradingAccount
             from app.models.trading_holding import TradingHolding
             from app.models.trading_transaction import TradingTransaction
+            from app.models.trading_suggestion import TradingSuggestion
             from app.extensions import db
             from app.services import market_service
 
@@ -134,6 +137,23 @@ def _make_account_tools(trader_id: int, account_id: int, app):
                 return (
                     f"Error: insufficient cash. Need ${cost:,.2f} but have ${account.cash_balance:,.2f}. "
                     f"Maximum you can buy: {max_qty} shares."
+                )
+
+            if suggestion_mode:
+                suggestion = TradingSuggestion(
+                    trader_id=trader_id,
+                    action="buy",
+                    symbol=symbol.upper(),
+                    quantity=quantity,
+                    price=buy_price,
+                    reasoning=rationale[:500],
+                    status="pending",
+                )
+                db.session.add(suggestion)
+                db.session.commit()
+                return (
+                    f"📋 Suggestion created: BUY {quantity} shares of {symbol.upper()} @ ${buy_price:.2f} "
+                    f"(total ${cost:,.2f}). Awaiting human approval."
                 )
 
             account.cash_balance = round(account.cash_balance - cost, 2)
@@ -186,6 +206,7 @@ def _make_account_tools(trader_id: int, account_id: int, app):
             from app.models.trading_account import TradingAccount
             from app.models.trading_holding import TradingHolding
             from app.models.trading_transaction import TradingTransaction
+            from app.models.trading_suggestion import TradingSuggestion
             from app.extensions import db
             from app.services import market_service
 
@@ -202,6 +223,23 @@ def _make_account_tools(trader_id: int, account_id: int, app):
 
             sell_price = round(price * (1 - SPREAD), 4)
             proceeds = round(sell_price * quantity, 2)
+
+            if suggestion_mode:
+                suggestion = TradingSuggestion(
+                    trader_id=trader_id,
+                    action="sell",
+                    symbol=symbol.upper(),
+                    quantity=quantity,
+                    price=sell_price,
+                    reasoning=rationale[:500],
+                    status="pending",
+                )
+                db.session.add(suggestion)
+                db.session.commit()
+                return (
+                    f"📋 Suggestion created: SELL {quantity} shares of {symbol.upper()} @ ${sell_price:.2f} "
+                    f"(proceeds ${proceeds:,.2f}). Awaiting human approval."
+                )
 
             account.cash_balance = round(account.cash_balance + proceeds, 2)
             holding.quantity -= quantity
@@ -286,11 +324,12 @@ async def run_trader_agent(trader_id: int, app, do_trade: bool = True) -> dict:
         trader_identity = trader.identity
         trader_strategy = trader.strategy
         trader_model = trader.model
+        trader_require_approval = trader.require_approval
         account_id = trader.account_id
         initial_balance = account.initial_balance
 
     # Build in-process account tools
-    account_tools = _make_account_tools(trader_id, account_id, app)
+    account_tools = _make_account_tools(trader_id, account_id, app, suggestion_mode=trader_require_approval)
 
     model = _get_model(trader_model)
 
@@ -369,7 +408,7 @@ async def run_trader_agent(trader_id: int, app, do_trade: bool = True) -> dict:
             # Trader agent
             trader_agent = Agent(
                 name=trader_name,
-                instructions=trader_instructions(trader_name, trader_identity, trader_strategy),
+                instructions=trader_instructions(trader_name, trader_identity, trader_strategy, suggestion_mode=trader_require_approval),
                 model=model,
                 tools=[*account_tools, researcher_tool],
                 mcp_servers=[market_mcp],

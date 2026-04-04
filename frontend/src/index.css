@@ -557,6 +557,83 @@ select.input-field option { background: var(--surface-container); color: var(--o
   font-size: 0.75rem; font-weight: 700;
 }
 
+/* ── Trading page — Light Theme Override ──────────────────────── */
+.trading-light-theme {
+  --background:                #f5f5fa;
+  --surface:                   #ffffff;
+  --surface-dim:               #ececf2;
+  --surface-container-lowest:  #ffffff;
+  --surface-container-low:     #f8f8fc;
+  --surface-container:         #f0f0f6;
+  --surface-container-high:    #e8e8f0;
+  --surface-container-highest: #dddde8;
+  --surface-bright:            #ffffff;
+  --surface-variant:           #e8e8f0;
+  --on-surface:                #1a1a2e;
+  --on-surface-variant:        #5c5c7a;
+  --on-background:             #1a1a2e;
+  --outline:                   rgba(0,0,0,0.1);
+  --outline-variant:           rgba(0,0,0,0.05);
+  --primary:                   #6d52e8;
+  --primary-dim:               #5a3fd6;
+  --primary-container:         #ede8ff;
+  --on-primary:                #ffffff;
+  --tertiary:                  #059669;
+  --error:                     #dc2626;
+  color: var(--on-surface);
+}
+.trading-light-theme .card,
+.trading-light-theme .trader-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+.trading-light-theme .btn-primary {
+  background: #6d52e8;
+  box-shadow: 0 2px 8px rgba(109,82,232,0.25);
+}
+.trading-light-theme .btn-secondary {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.12);
+  color: #1a1a2e;
+}
+.trading-light-theme .btn-ghost { color: #5c5c7a; }
+.trading-light-theme .btn-ghost:hover { background: #e8e8f0; color: #1a1a2e; }
+.trading-light-theme .btn-danger {
+  background: rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.2);
+  color: #dc2626;
+}
+.trading-light-theme .input-field {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.12);
+  color: #1a1a2e;
+}
+.trading-light-theme .input-field:focus {
+  border-color: rgba(109,82,232,0.5);
+  box-shadow: 0 0 0 3px rgba(109,82,232,0.1);
+}
+.trading-light-theme .input-field::placeholder { color: #9999aa; }
+.trading-light-theme select.input-field option { background: #fff; color: #1a1a2e; }
+.trading-light-theme .modal-card {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+}
+.trading-light-theme .badge-primary {
+  background: rgba(109,82,232,0.1);
+  color: #6d52e8;
+  border-color: rgba(109,82,232,0.2);
+}
+.trading-light-theme .badge-tertiary {
+  background: rgba(5,150,105,0.1);
+  color: #059669;
+  border-color: rgba(5,150,105,0.2);
+}
+.trading-light-theme .section-title { color: #5c5c7a; }
+.trading-light-theme .recharts-default-tooltip {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
 /* ── Trading page specifics ───────────────────────────────────── */
 .trader-card {
   background: var(--surface-container);
@@ -573,6 +650,49 @@ select.input-field option { background: var(--surface-container); color: var(--o
   border-bottom: 1px solid var(--outline);
 }
 .holding-row:last-child { border-bottom: none; }
+
+/* Suggestion card */
+.suggestion-card {
+  background: var(--surface-container);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-2xl);
+  padding: 1rem;
+  transition: border-color 0.2s;
+}
+.suggestion-card:hover { border-color: rgba(109,82,232,0.25); }
+.suggestion-card.buy { border-left: 3px solid var(--tertiary); }
+.suggestion-card.sell { border-left: 3px solid var(--error); }
+
+/* Portfolio chart container */
+.portfolio-chart-container {
+  background: var(--surface-container);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-2xl);
+  padding: 1rem;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 36px; height: 20px;
+  background: var(--surface-container-highest);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  padding: 0;
+}
+.toggle-switch.active { background: var(--primary); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-switch.active::after { transform: translateX(16px); }
 
 /* ── Modal overlay ────────────────────────────────────────────── */
 .modal-overlay {
