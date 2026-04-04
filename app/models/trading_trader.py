@@ -20,6 +20,9 @@ class TradingTrader(db.Model):
     strategy = db.Column(db.Text, nullable=False)  # Investment strategy instructions
     model = db.Column(db.String(80), nullable=False, default="gemini-2.0-flash")
 
+    # Approval mode
+    require_approval = db.Column(db.Boolean, nullable=False, default=False)
+
     # Scheduling
     schedule_interval = db.Column(db.String(20), nullable=False, default="manual")
     schedule_active = db.Column(db.Boolean, nullable=False, default=False)
@@ -37,6 +40,9 @@ class TradingTrader(db.Model):
     transactions = db.relationship(
         "TradingTransaction", backref="trader", lazy=True, cascade="all, delete-orphan"
     )
+    suggestions = db.relationship(
+        "TradingSuggestion", backref="trader", lazy=True, cascade="all, delete-orphan"
+    )
 
     def to_dict(self, include_holdings=False):
         d = {
@@ -47,6 +53,7 @@ class TradingTrader(db.Model):
             "identity": self.identity,
             "strategy": self.strategy,
             "model": self.model,
+            "require_approval": self.require_approval,
             "schedule_interval": self.schedule_interval,
             "schedule_active": self.schedule_active,
             "last_run_at": self.last_run_at.isoformat() if self.last_run_at else None,

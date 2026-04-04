@@ -62,7 +62,7 @@ def create_app(config_class=Config):
             user, wallet, account, category, budget, expense, transaction,
             streak, challenge, challenge_participant,
             rewards_catalog, redemption, friendship,
-            trading_account, trading_trader, trading_holding, trading_transaction,
+            trading_account, trading_trader, trading_holding, trading_transaction, trading_suggestion,
             subscription, category_budget, savings_goal,
             challenge_250, daily_savings, blockchain_savings,
         )

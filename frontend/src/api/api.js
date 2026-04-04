@@ -72,7 +72,29 @@ export const removeSchedule= (id)         => fetchAPI(`/trading/traders/${id}/sc
 
 // ── Trading — Data ────────────────────────────────────────────────
 export const getTraderTransactions = (id, limit=50) => fetchAPI(`/trading/traders/${id}/transactions?limit=${limit}`);
+export const getPortfolioHistory   = (id)           => fetchAPI(`/trading/traders/${id}/portfolio-history`);
 export const getMarketQuote        = (symbol)       => fetchAPI(`/trading/market/quote/${symbol.toUpperCase()}`);
+
+// ── Trading — Fund Transfer ───────────────────────────────────────
+export const getUserAccounts       = ()             => fetchAPI('/trading/user-accounts');
+export const transferFunds         = (source_account_id, trading_account_id, amount) =>
+  fetchAPI('/trading/transfer', { method: 'POST', body: JSON.stringify({ source_account_id, trading_account_id, amount }) });
+
+// ── Trading — CSV Import ──────────────────────────────────────────
+export const importPortfolioCSV    = (trader_id, csv_content) =>
+  fetchAPI(`/trading/traders/${trader_id}/import-csv`, { method: 'POST', body: JSON.stringify({ csv_content }) });
+
+// ── Trading — Suggestions ─────────────────────────────────────────
+export const getSuggestions        = (trader_id, status) =>
+  fetchAPI(`/trading/traders/${trader_id}/suggestions${status ? `?status=${status}` : ''}`);
+export const resolveSuggestion     = (suggestion_id, action) =>
+  fetchAPI(`/trading/suggestions/${suggestion_id}/resolve`, { method: 'POST', body: JSON.stringify({ action }) });
+export const bulkResolveSuggestions = (suggestion_ids, action) =>
+  fetchAPI('/trading/suggestions/bulk-resolve', { method: 'POST', body: JSON.stringify({ suggestion_ids, action }) });
+
+// ── Trading — Strategy Advisor ────────────────────────────────────
+export const getStrategyAdvice     = (trader_id, question='') =>
+  fetchAPI(`/trading/traders/${trader_id}/strategy-advisor`, { method: 'POST', body: JSON.stringify({ question }) });
 
 // ── Categories ────────────────────────────────────────────────────
 export const getCategories        = (month)          => fetchAPI(`/categories${month ? `?month=${month}` : ''}`);
