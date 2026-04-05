@@ -639,14 +639,19 @@ select.input-field option { background: var(--surface-container); color: var(--o
   background: var(--surface-container);
   border: 1px solid var(--outline);
   border-radius: var(--radius-3xl);
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   overflow: hidden;
 }
-.trader-card:hover { border-color: rgba(157,133,255,0.2); transform: translateY(-2px); }
+.trader-card:hover {
+  border-color: rgba(157,133,255,0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.trader-card-inner { padding: 1.5rem; }
 
 .holding-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.5rem 0;
+  padding: 0.625rem 0;
   border-bottom: 1px solid var(--outline);
 }
 .holding-row:last-child { border-bottom: none; }
@@ -656,7 +661,7 @@ select.input-field option { background: var(--surface-container); color: var(--o
   background: var(--surface-container);
   border: 1px solid var(--outline);
   border-radius: var(--radius-2xl);
-  padding: 1rem;
+  padding: 1.125rem;
   transition: border-color 0.2s;
 }
 .suggestion-card:hover { border-color: rgba(109,82,232,0.25); }
@@ -668,8 +673,45 @@ select.input-field option { background: var(--surface-container); color: var(--o
   background: var(--surface-container);
   border: 1px solid var(--outline);
   border-radius: var(--radius-2xl);
-  padding: 1rem;
+  padding: 1.25rem;
 }
+
+/* Panel header with refresh */
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.875rem;
+}
+.panel-header .section-title { margin-bottom: 0; }
+
+.btn-icon-sm {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 1px solid var(--outline);
+  color: var(--on-surface-variant);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-icon-sm:hover {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  border-color: rgba(109,82,232,0.3);
+}
+.btn-icon-sm.spinning svg { animation: spin 0.7s linear infinite; }
+
+/* Trader stat row */
+.trader-stat-row {
+  display: flex; gap: 0.75rem; margin-bottom: 1rem;
+}
+.trader-stat-box {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-container-high);
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+.trader-stat-box .stat-val { font-weight: 800; font-size: 1rem; }
+.trader-stat-box .stat-lbl { font-size: 0.65rem; color: var(--on-surface-variant); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 
 /* Toggle switch */
 .toggle-switch {
