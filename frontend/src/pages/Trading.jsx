@@ -235,6 +235,14 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
     }
   };
 
+  const rerunAdvisor = async () => {
+    setAdvisorLoading(true);
+    setAdvice(null);
+    try { setAdvice(await getStrategyAdvice(trader.id)); }
+    catch(e) { alert(e.message); }
+    finally { setAdvisorLoading(false); }
+  };
+
   const handleCsvImport = async () => {
     if (!csvContent.trim()) return;
     setCsvLoading(true);
@@ -385,7 +393,13 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
       {/* Strategy advisor */}
       {showAdvisor && (
         <div style={{ borderTop:'1px solid var(--outline)', padding:'1.25rem' }}>
-          <p className="section-title" style={{ marginBottom:'0.75rem' }}>Strategy Advisor</p>
+          <div className="panel-header">
+            <p className="section-title">Strategy Advisor</p>
+            <button className={`btn-icon-sm ${advisorLoading ? 'spinning' : ''}`}
+              onClick={rerunAdvisor} title="Re-run advisor with latest data">
+              <RefreshCw size={13} />
+            </button>
+          </div>
           {advisorLoading ? (
             <div style={{ display:'flex', justifyContent:'center', padding:'1.5rem' }}><div className="spinner" /></div>
           ) : advice ? (

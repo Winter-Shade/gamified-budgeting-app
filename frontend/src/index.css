@@ -633,6 +633,33 @@ select.input-field option { background: var(--surface-container); color: var(--o
   border-color: rgba(0,0,0,0.1) !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
 }
+/* Ensure entire page background is light */
+.trading-light-theme {
+  background: #f5f5fa;
+  border-radius: 0;
+}
+/* Empty states */
+.trading-light-theme .empty-state { color: #5c5c7a; }
+.trading-light-theme .empty-icon { background: #e8e8f0; border-color: rgba(0,0,0,0.08); }
+/* Spinner */
+.trading-light-theme .spinner { border-color: rgba(109,82,232,0.15); border-top-color: #6d52e8; }
+/* Modal overlay - lighter backdrop for light page */
+.trading-light-theme ~ .modal-overlay,
+.trading-light-theme .modal-overlay { background: rgba(0,0,0,0.4); }
+/* Remaining badges */
+.trading-light-theme .badge-secondary { background: rgba(251,191,36,0.12); color: #b45309; border-color: rgba(251,191,36,0.25); }
+.trading-light-theme .badge-error { background: rgba(220,38,38,0.08); color: #dc2626; border-color: rgba(220,38,38,0.2); }
+.trading-light-theme .badge-muted { background: rgba(0,0,0,0.04); color: #5c5c7a; border-color: rgba(0,0,0,0.08); }
+/* Toggle switch */
+.trading-light-theme .toggle-switch { background: #d1d5db; }
+.trading-light-theme .toggle-switch.active { background: #6d52e8; }
+/* Progress bars */
+.trading-light-theme .progress-track { background: rgba(0,0,0,0.06); }
+/* Scrollbar inside trading */
+.trading-light-theme::-webkit-scrollbar-thumb { background: #d1d5db; }
+/* Select dropdown inside trader cards */
+.trading-light-theme select { background: #ffffff; color: #1a1a2e; }
+.trading-light-theme select option { background: #ffffff; color: #1a1a2e; }
 
 /* ── Trading page specifics ───────────────────────────────────── */
 .trader-card {

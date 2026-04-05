@@ -146,7 +146,7 @@ def _make_account_tools(trader_id: int, account_id: int, app, suggestion_mode: b
                     symbol=symbol.upper(),
                     quantity=quantity,
                     price=buy_price,
-                    reasoning=rationale[:500],
+                    reasoning=rationale[:1000],
                     status="pending",
                 )
                 db.session.add(suggestion)
@@ -231,7 +231,7 @@ def _make_account_tools(trader_id: int, account_id: int, app, suggestion_mode: b
                     symbol=symbol.upper(),
                     quantity=quantity,
                     price=sell_price,
-                    reasoning=rationale[:500],
+                    reasoning=rationale[:1000],
                     status="pending",
                 )
                 db.session.add(suggestion)

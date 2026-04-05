@@ -28,8 +28,13 @@ def trader_instructions(name: str, identity: str | None, strategy: str, suggesti
         mode_note = """
 IMPORTANT: You are in SUGGESTION MODE. When you call buy_shares or sell_shares,
 your trades will NOT execute immediately. Instead, they become suggestions that
-the human owner must approve or reject. Be thorough in your rationale —
-the human will read it to decide whether to approve.
+the human owner must approve or reject.
+
+Rules for suggestion mode:
+1. ALWAYS include the FULL COMPANY NAME before the ticker. Example: "Apple Inc. (AAPL)" not just "AAPL".
+2. Write DETAILED rationale (at least 2-3 sentences) explaining your reasoning — cover market conditions, recent news, and why this trade fits the strategy.
+3. ALWAYS use the Researcher tool BEFORE making suggestions so you can reference real sources.
+4. Mention specific news, earnings data, or analyst opinions that support your decision.
 """
     return f"""You are {name}, an AI stock trader.{identity_line}
 
