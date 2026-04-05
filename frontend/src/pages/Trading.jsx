@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  getTradingAccounts, createTradingAccount, updateTradingAccount,
+  getTradingAccounts, createTradingAccount, updateTradingAccount, deleteTradingAccount,
   getTraders, createTrader, updateTrader, deleteTrader, runTrader,
   setSchedule, getTraderTransactions, getPortfolioHistory,
   getUserAccounts, transferFunds, importPortfolioCSV,
@@ -10,7 +10,7 @@ import {
 import {
   TrendingUp, Plus, Play, Clock, Trash2, RefreshCw, X,
   Upload, ArrowRightLeft, Check, XCircle, Lightbulb, BarChart3, Shield,
-  ChevronDown, ChevronUp, FileText, Bot,
+  ChevronDown, ChevronUp, FileText, Bot, Pencil,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -126,7 +126,8 @@ function SuggestionCard({ suggestion, onResolve, resolving }) {
 }
 
 /* ── Trader Card (Stitch "AI Strategy Control" layout) ── */
-function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, running, onRefresh }) {
+function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, running, onRefresh, onUpdateStrategy }) {
+  const [collapsed, setCollapsed] = useState(true);
   const [showChart, setShowChart] = useState(false);
   const [showTxns, setShowTxns] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -142,6 +143,8 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvContent, setCsvContent] = useState('');
   const [csvLoading, setCsvLoading] = useState(false);
+  const [editingStrategy, setEditingStrategy] = useState(false);
+  const [strategyDraft, setStrategyDraft] = useState(trader.strategy);
 
   const holdings = trader.holdings ?? [];
   const pendingCount = trader.pending_suggestions ?? 0;
@@ -220,46 +223,88 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
     finally { setCsvLoading(false); }
   };
 
+  const handleSaveStrategy = async () => {
+    try {
+      await onUpdateStrategy(trader.id, strategyDraft);
+      setEditingStrategy(false);
+    } catch(e) { alert(e.message); }
+  };
+
   return (
     <div className="tl-trader-card">
-      {/* ── Header ── */}
-      <div className="tl-trader-section" style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'1rem'}}>
+      {/* ── Header (always visible, click to expand/collapse) ── */}
+      <div className="tl-trader-section" style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',userSelect:'none'}} onClick={()=>setCollapsed(!collapsed)}>
         <div style={{display:'flex',gap:'1rem',alignItems:'center',flex:1,minWidth:0}}>
-          <div style={{width:56,height:56,background:'rgba(84,53,206,0.05)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <Bot size={28} color="#5435ce"/>
+          <div style={{width:48,height:48,background:'rgba(84,53,206,0.05)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <Bot size={24} color="#5435ce"/>
           </div>
-          <div style={{minWidth:0}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-              <h4 style={{fontSize:'1.25rem',fontWeight:700,letterSpacing:'-0.02em'}}>{trader.name}</h4>
+          <div style={{minWidth:0,flex:1}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+              <h4 style={{fontSize:'1.125rem',fontWeight:700,letterSpacing:'-0.02em'}}>{trader.name}</h4>
               <span className="tl-model-badge">{trader.model}</span>
+              {pendingCount > 0 && <span style={{fontSize:'10px',fontWeight:700,color:'var(--tl-on-primary)',background:'var(--tl-red-container)',padding:'1px 6px',borderRadius:9999}}>{pendingCount} pending</span>}
             </div>
-            <p style={{fontSize:'0.875rem',color:'var(--tl-on-surface-var)',lineHeight:1.5,maxWidth:480}}>
+            <p style={{fontSize:'0.8125rem',color:'var(--tl-on-surface-var)',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:collapsed?'nowrap':'normal',maxWidth:500}}>
               {trader.identity ? `"${trader.identity}" · ` : ''}{trader.strategy}
             </p>
           </div>
         </div>
-        {/* Toolbar icons */}
-        <div style={{display:'flex',gap:4}}>
-          <button className={`tl-icon-btn ${showChart ? 'active' : ''}`} title="Chart"
-            onClick={()=>{setShowChart(!showChart);if(!showChart) setChartKey(k=>k+1);}}>
-            <BarChart3 size={20}/>
-          </button>
-          <button className={`tl-icon-btn ${showTxns ? 'active' : ''}`} title="Transactions" onClick={toggleTxns}>
-            <FileText size={20}/>
-          </button>
-          {trader.require_approval && (
-            <button className={`tl-icon-btn ${showSuggestions ? 'active' : ''}`} title="Suggestions" onClick={toggleSuggestions}>
-              <Lightbulb size={20}/>
-              {pendingCount > 0 && <span className="tl-notif">{pendingCount}</span>}
-            </button>
-          )}
-          <button className={`tl-icon-btn ${showAdvisor ? 'active' : ''}`} title="Advisor" onClick={toggleAdvisor}>
-            <Shield size={20}/>
-          </button>
-          <button className="tl-icon-btn" title="Import CSV" onClick={()=>setShowCsvModal(true)}>
-            <Upload size={20}/>
-          </button>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <span className="tl-value-md" style={{fontSize:'1rem'}}>{fmt(trader.portfolio_value ?? 0)}</span>
+          {collapsed ? <ChevronDown size={20} color="var(--tl-on-surface-var)"/> : <ChevronUp size={20} color="var(--tl-on-surface-var)"/>}
         </div>
+      </div>
+
+      {/* ── Expanded content ── */}
+      {!collapsed && (<>
+      {/* Strategy edit */}
+      <div className="tl-trader-section" style={{padding:'1rem 2rem'}}>
+        {editingStrategy ? (
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <p className="tl-label">Edit Strategy</p>
+            <textarea className="input-field input-area" value={strategyDraft} onChange={e=>setStrategyDraft(e.target.value)}
+              style={{minHeight:80,fontSize:'0.875rem'}} onClick={e=>e.stopPropagation()}/>
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+              <button className="tl-btn-outline" style={{fontSize:'0.8125rem',padding:'6px 14px'}} onClick={()=>{setEditingStrategy(false);setStrategyDraft(trader.strategy);}}>Cancel</button>
+              <button className="tl-btn-primary" style={{fontSize:'0.8125rem',padding:'6px 14px'}} onClick={handleSaveStrategy}>Save Strategy</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+            <div style={{flex:1,minWidth:0}}>
+              <p className="tl-label" style={{marginBottom:4}}>Strategy</p>
+              <p style={{fontSize:'0.875rem',color:'var(--tl-on-surface-var)',lineHeight:1.6}}>
+                {trader.identity ? `"${trader.identity}" · ` : ''}{trader.strategy}
+              </p>
+            </div>
+            <button className="tl-icon-btn" title="Edit strategy" onClick={e=>{e.stopPropagation();setEditingStrategy(true);setStrategyDraft(trader.strategy);}}>
+              <Pencil size={16}/>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar icons */}
+      <div style={{display:'flex',gap:4,padding:'0 2rem 0.75rem',flexWrap:'wrap'}}>
+        <button className={`tl-icon-btn ${showChart ? 'active' : ''}`} title="Chart"
+          onClick={()=>{setShowChart(!showChart);if(!showChart) setChartKey(k=>k+1);}}>
+          <BarChart3 size={20}/>
+        </button>
+        <button className={`tl-icon-btn ${showTxns ? 'active' : ''}`} title="Transactions" onClick={toggleTxns}>
+          <FileText size={20}/>
+        </button>
+        {trader.require_approval && (
+          <button className={`tl-icon-btn ${showSuggestions ? 'active' : ''}`} title="Suggestions" onClick={toggleSuggestions}>
+            <Lightbulb size={20}/>
+            {pendingCount > 0 && <span className="tl-notif">{pendingCount}</span>}
+          </button>
+        )}
+        <button className={`tl-icon-btn ${showAdvisor ? 'active' : ''}`} title="Advisor" onClick={toggleAdvisor}>
+          <Shield size={20}/>
+        </button>
+        <button className="tl-icon-btn" title="Import CSV" onClick={()=>setShowCsvModal(true)}>
+          <Upload size={20}/>
+        </button>
       </div>
 
       {/* ── Stats Grid (3-col) ── */}
@@ -439,6 +484,7 @@ function TraderCard({ trader, onRun, onDelete, onSchedule, onToggleApproval, run
           </button>
         </div>
       </div>
+      </>)}{/* end collapsed guard */}
 
       {/* CSV Modal */}
       <Modal open={showCsvModal} onClose={()=>setShowCsvModal(false)}>
@@ -469,6 +515,8 @@ export default function Trading() {
   const [running, setRunning] = useState(null);
   const [showNewTrader, setShowNewTrader] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showNewAccModal, setShowNewAccModal] = useState(false);
+  const [newAccData, setNewAccData] = useState({name:'My Trading Account',balance:'10000'});
   const [runResult, setRunResult] = useState(null);
   const [newTrader, setNewTrader] = useState({name:'',identity:'',strategy:'',model:'gemini-2.0-flash',require_approval:false});
   const [userAccounts, setUserAccounts] = useState([]);
@@ -492,11 +540,27 @@ export default function Trading() {
   useEffect(() => { loadTraders(); }, [loadTraders]);
 
   const handleCreateAccount = async () => {
-    try { await createTradingAccount('My Trading Account',10000); await loadAccounts(); } catch(e) { alert(e.message); }
+    const name = newAccData.name.trim() || 'My Trading Account';
+    const balance = parseFloat(newAccData.balance) || 10000;
+    if (balance <= 0) return alert('Balance must be greater than 0');
+    try {
+      await createTradingAccount(name, balance);
+      setShowNewAccModal(false);
+      setNewAccData({name:'My Trading Account',balance:'10000'});
+      await loadAccounts();
+    } catch(e) { alert(e.message); }
   };
   const handleReset = async (id) => {
     if (!confirm('Reset this account? All holdings and transactions will be cleared.')) return;
     try { await updateTradingAccount(id,{reset:true}); await loadAccounts(); await loadTraders(); } catch(e) { alert(e.message); }
+  };
+  const handleDeleteAccount = async (id) => {
+    if (!confirm('Delete this account completely? All data will be lost forever.')) return;
+    try { 
+      await deleteTradingAccount(id); 
+      if(selectedAcc === id) setSelectedAcc(null);
+      await loadAccounts(); 
+    } catch(e) { alert(e.message); }
   };
   const handleCreateTrader = async () => {
     if (!newTrader.name.trim() || !newTrader.strategy.trim()) return alert('Name and strategy are required');
@@ -522,6 +586,10 @@ export default function Trading() {
   const handleToggleApproval = async (tid, val) => {
     try { await updateTrader(tid, {require_approval:val}); await loadTraders(); } catch(e) { alert(e.message); }
   };
+  const handleUpdateStrategy = async (tid, newStrategy) => {
+    if (!newStrategy.trim()) return alert('Strategy cannot be empty');
+    try { await updateTrader(tid, {strategy:newStrategy.trim()}); await loadTraders(); } catch(e) { alert(e.message); }
+  };
   const handleOpenTransfer = async () => {
     setShowTransfer(true);
     try { setUserAccounts(await getUserAccounts()); } catch(e) { console.error(e); }
@@ -538,17 +606,18 @@ export default function Trading() {
   const handleRefresh = async () => { await loadAccounts(); await loadTraders(); };
 
   return (
-    <div className="trading-light-theme" style={{minHeight:'100vh',padding:'0 2.5rem 3rem',animation:'fadeIn 0.3s ease'}}>
-      {/* ── Top Bar ── */}
-      <header style={{position:'sticky',top:0,zIndex:40,background:'rgba(248,249,250,0.8)',backdropFilter:'blur(12px)',padding:'1.5rem 0',display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.5rem'}}>
+    <div className="trading-light-theme" style={{minHeight:'100vh',animation:'fadeIn 0.3s ease'}}>
+      {/* ── Top Bar (fixed within scroll) ── */}
+      <header style={{position:'sticky',top:0,zIndex:40,background:'rgba(248,249,250,0.92)',backdropFilter:'blur(16px)',padding:'1.25rem 2.5rem',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid rgba(201,196,215,0.1)',margin:'0 -2.5rem',width:'calc(100% + 5rem)'}}>
         <h2 style={{fontSize:'1.5rem',fontWeight:800,letterSpacing:'-0.03em'}}>
           BudgetQuest <span style={{fontWeight:400,color:'var(--tl-on-surface-var)'}}>Lab</span>
         </h2>
         <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
           {selectedAcc && <button className="tl-btn-outline" onClick={handleOpenTransfer}><ArrowRightLeft size={14}/> Transfer Funds</button>}
-          {accounts.length === 0 && <button className="tl-btn-primary" onClick={handleCreateAccount}><Plus size={14}/> New Account</button>}
+          <button className="tl-btn-primary" onClick={()=>setShowNewAccModal(true)}><Plus size={14}/> New Account</button>
         </div>
       </header>
+      <div style={{padding:'1.5rem 2.5rem 3rem'}}>
 
       {/* ── Accounts Grid ── */}
       {accounts.length > 0 ? (
@@ -582,10 +651,16 @@ export default function Trading() {
                       <p style={{fontSize:'0.875rem',fontWeight:600}}>{acc.trader_count} Active</p>
                     </div>
                   </div>
-                  <button className="tl-btn-ghost" style={{marginTop:10,fontSize:'0.75rem',padding:'4px 8px',gap:4}}
-                    onClick={e=>{e.stopPropagation();handleReset(acc.id);}}>
-                    <RefreshCw size={11}/> Reset
-                  </button>
+                  <div style={{display:'flex',gap:8,marginTop:10}}>
+                    <button className="tl-btn-ghost" style={{fontSize:'0.75rem',padding:'4px 8px',gap:4}}
+                      onClick={e=>{e.stopPropagation();handleReset(acc.id);}}>
+                      <RefreshCw size={11}/> Reset
+                    </button>
+                    <button className="tl-btn-ghost" style={{fontSize:'0.75rem',padding:'4px 8px',gap:4,color:'var(--tl-red)'}}
+                      onClick={e=>{e.stopPropagation();handleDeleteAccount(acc.id);}}>
+                      <Trash2 size={11}/> Delete
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -641,7 +716,8 @@ export default function Trading() {
               {traders.map(t => (
                 <TraderCard key={t.id} trader={t} running={running}
                   onRun={handleRun} onDelete={handleDelete} onSchedule={handleSchedule}
-                  onToggleApproval={handleToggleApproval} onRefresh={handleRefresh}/>
+                  onToggleApproval={handleToggleApproval} onRefresh={handleRefresh}
+                  onUpdateStrategy={handleUpdateStrategy}/>
               ))}
             </div>
           )}
@@ -710,6 +786,26 @@ export default function Trading() {
           </div>
         </div>
       </Modal>
+
+      {/* ── New Account Modal ── */}
+      <Modal open={showNewAccModal} onClose={()=>setShowNewAccModal(false)}>
+        <h3 style={{fontWeight:800,fontSize:'1.25rem',marginBottom:'1.5rem',color:'var(--tl-on-surface)'}}>Create Trading Account</h3>
+        <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+          <div className="form-group">
+            <label style={{fontSize:'0.8125rem',fontWeight:600,color:'var(--tl-on-surface-var)'}}>Account Name</label>
+            <input className="input-field" value={newAccData.name} onChange={e=>setNewAccData(p=>({...p,name:e.target.value}))} placeholder="e.g. Growth Portfolio"/>
+          </div>
+          <div className="form-group">
+            <label style={{fontSize:'0.8125rem',fontWeight:600,color:'var(--tl-on-surface-var)'}}>Initial Cash Balance ($)</label>
+            <input className="input-field" type="number" value={newAccData.balance} onChange={e=>setNewAccData(p=>({...p,balance:e.target.value}))} placeholder="10000"/>
+          </div>
+          <div style={{display:'flex',gap:8,marginTop:4}}>
+            <button className="tl-btn-outline" style={{flex:1}} onClick={()=>setShowNewAccModal(false)}>Cancel</button>
+            <button className="tl-btn-primary" style={{flex:2}} onClick={handleCreateAccount}>Create Account</button>
+          </div>
+        </div>
+      </Modal>
+      </div>{/* end padded content */}
     </div>
   );
 }
